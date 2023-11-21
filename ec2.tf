@@ -1,7 +1,7 @@
 # EC2 Launch template
 resource "aws_launch_template" "fullnode_ec2_template" {
   name_prefix   = "fullnode_ec2_launch_template"
-  image_id      = "ami-0b4bb4751e9a8fbdb"
+  image_id      = "ami-0b4bb4751e9a8fbdb" //Ubuntu 20.04
   instance_type = var.ec2_instance_type
   key_name      = aws_key_pair.ssh_key.key_name
   user_data = base64encode(templatefile(var.user_data_file, {
@@ -33,12 +33,13 @@ resource "aws_launch_template" "fullnode_ec2_template" {
   }
 }
 
+# Loading key pair for ssh 
 resource "aws_key_pair" "ssh_key" {
   key_name   = "ssh_key"
   public_key = file(var.ssh_public_key)
 }
 
-# Autoscaling group
+# Autoscaling group configuration
 resource "aws_autoscaling_group" "fullnode_asg" {
   desired_capacity = 1
   max_size         = 2

@@ -1,3 +1,4 @@
+# Security group for application load balancer
 resource "aws_security_group" "fullnode_sg_elb" {
   name   = "fullnode-sg_for_elb"
   vpc_id = aws_vpc.fullnode_main.id
@@ -28,15 +29,16 @@ resource "aws_security_group" "fullnode_sg_elb" {
   }
 }
 
+# Security group for EC2 instance 
 resource "aws_security_group" "fullnode_sg_ec2" {
-  name   = "fullnode-sg_for_ec2"
+  name   = "fullnode-sg_ec2"
   vpc_id = aws_vpc.fullnode_main.id
 
   ingress {
     description     = "Allow http request from Load Balancer"
     protocol        = "tcp"
-    from_port       = 80 # range of
-    to_port         = 80 # port numbers
+    from_port       = 80 
+    to_port         = 80
     security_groups = [aws_security_group.fullnode_sg_elb.id]
   }
 
