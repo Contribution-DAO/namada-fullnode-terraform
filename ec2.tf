@@ -56,4 +56,54 @@ resource "aws_autoscaling_group" "fullnode_asg" {
     id      = aws_launch_template.fullnode_ec2_template.id
     version = "$Latest"
   }
+  
+}
+# CPU Utilization Scaling Policies
+resource "aws_autoscaling_policy" "scale_out" {
+  name                   = "scale_out_policy"
+  scaling_adjustment     = 1
+  adjustment_type        = "ChangeInCapacity"
+  cooldown               = 300
+  autoscaling_group_name = aws_autoscaling_group.fullnode_asg.name
+}
+
+resource "aws_autoscaling_policy" "scale_in" {
+  name                   = "scale_in_policy"
+  scaling_adjustment     = -1
+  adjustment_type        = "ChangeInCapacity"
+  cooldown               = 300
+  autoscaling_group_name = aws_autoscaling_group.fullnode_asg.name
+}
+
+# CloudWatch CPU Utilization Alarms
+resource "aws_cloudwatch_metric_alarm" "high_cpu_utilization" {
+  alarm_name          = "high-cpu-utilization"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = 2
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/EC2"
+  period              = 300
+  statistic           = "Average"
+  threshold           = 50
+  alarm_actions       = [aws_autoscaling_policy.scale_out.arn]
+
+  dimensions = {
+    AutoScalingGroupName = aws_autoscaling_group.fullnode_asg.name
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "low_cpu_utilization" {
+  alarm_name          = "low-cpu-utilization"
+  comparison_operator = "LessThanOrEqualToThreshold"
+  evaluation_periods  = 2
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/EC2"
+  period              = 300
+  statistic           = "Average"
+  threshold           = 50
+  alarm_actions       = [aws_autoscaling_policy.scale_in.arn]
+
+  dimensions = {
+    AutoScalingGroupName = aws_autoscaling_group.fullnode_asg.name
+  }
 }
