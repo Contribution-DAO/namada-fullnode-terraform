@@ -13,6 +13,21 @@ echo "\033[0;33m"
 echo "==========================================================================================================================="                                                                                    
 sleep 1
 
+sudo su
+export HOME=/root
+export USER=$(whoami)
+export NAMADA_TAG=${namada_tag}
+export CBFT=${cbft}
+export NAMADA_CHAIN_ID=${namada_chain_id}
+
+echo "\e[1m\e[32mPre install script to install Namada fullnode with information below ... \e[0m" && sleep 1
+echo "\e[1m\e[32m $HOME" 
+echo "\e[1m\e[32m $USER" 
+echo "\e[1m\e[32m $NAMADA_TAG" 
+echo "\e[1m\e[32m $CBFT" 
+echo "\e[1m\e[32m $NAMADA_CHAIN_ID"
+
+
 echo "\e[1m\e[32mInstalling update and libs ... \e[0m" && sleep 1
 cd $HOME
 sudo apt update && sudo apt upgrade -y
@@ -29,13 +44,13 @@ sudo rm -rf /usr/local/go
 sudo tar -C /usr/local -xzf "go$ver.linux-amd64.tar.gz"
 rm "go$ver.linux-amd64.tar.gz"
 echo "export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin" >> $HOME/.bash_profile
-. $HOME/.bash_profile
+. /$HOME/.bash_profile 
 go version
 
 echo "\e[1m\e[32mInstalling Rush ... \e[0m" && sleep 1
 cd $HOME
 sudo curl https://sh.rustup.rs -sSf | sh -s -- -y 
-. $HOME/.cargo/env
+. /$HOME/.cargo/env
 curl https://deb.nodesource.com/setup_18.x | sudo bash
 sudo apt install cargo nodejs -y < "/dev/null"  
 cargo --version
@@ -50,17 +65,7 @@ sudo unzip -o $PROTOC_ZIP -d /usr/local 'include/*'
 rm -f $PROTOC_ZIP
 protoc --version
 
-export NAMADA_TAG=v0.23.2
-export CBFT=v0.37.2
-export NAMADA_CHAIN_ID=public-testnet-14.5d79b6958580
-
-
 echo "\e[1m\e[32mInstalling Namada ... \e[0m" && sleep 1
-
-echo "\e[1m\e[32m $NAMADA_TAG" 
-echo "\e[1m\e[32m $CBFT" 
-echo "\e[1m\e[32m $NAMADA_CHAIN_ID"
-
 
 cd $HOME && git clone https://github.com/anoma/namada && cd namada && git checkout $NAMADA_TAG
 make build-release
@@ -70,14 +75,18 @@ echo "\e[1m\e[32mInstalling Comebft ... \e[0m" && sleep 1
 cd $HOME && git clone https://github.com/cometbft/cometbft.git && cd cometbft && git checkout $CBFT
 make build
 
-cd $HOME && cp $HOME/cometbft/build/cometbft /usr/local/bin/cometbft && \
-cp "$HOME/namada/target/release/namada" /usr/local/bin/namada && \
-cp "$HOME/namada/target/release/namadac" /usr/local/bin/namadac && \
-cp "$HOME/namada/target/release/namadan" /usr/local/bin/namadan && \
-cp "$HOME/namada/target/release/namadaw" /usr/local/bin/namadaw && \
-cp "$HOME/namada/target/release/namadar" /usr/local/bin/namadar
+cd $HOME  
+sudo cp $HOME/cometbft/build/cometbft /usr/local/bin/cometbft
+sudo cp "$HOME/namada/target/release/namada" /usr/local/bin/namada
+sudo cp "$HOME/namada/target/release/namadac" /usr/local/bin/namadac
+sudo cp "$HOME/namada/target/release/namadan" /usr/local/bin/namadan
+sudo cp "$HOME/namada/target/release/namadaw" /usr/local/bin/namadaw
+sudo cp "$HOME/namada/target/release/namadar" /usr/local/bin/namadar
 cometbft version
 namada --version
+
+echo "\e[1m\e[32mJoin-network ... \e[0m" && sleep 1
+namada client utils join-network --chain-id $NAMADA_CHAIN_ID
 
 echo "\e[1m\e[32mCreating Namadad service ... \e[0m" && sleep 1
 sudo tee /etc/systemd/system/namadad.service > /dev/null <<EOF
@@ -102,13 +111,10 @@ EOF
 sudo systemctl daemon-reload
 sudo systemctl enable namadad
 
-echo "\e[1m\e[32mJoin-network ... \e[0m" && sleep 1
-namada client utils join-network --chain-id $NAMADA_CHAIN_ID
-
 sed -i '/^\[ledger\.cometbft\.rpc\]$/,/^\[/ s/laddr = "tcp:\/\/127\.0\.0\.1:26657"/laddr = "tcp:\/\/0.0.0.0:26657"/' "$HOME/.local/share/namada/$NAMADA_CHAIN_ID/config.toml"
 
 echo "\e[1m\e[32mStarting namadad service ... \e[0m" && sleep 1
-sudo systemctl restart namadad
+sudo systemctl restart namadad && journalctl -u namadad -f -o cat
 
 
 echo "\e[1m\e[32mInstaling nginx... \e[0m" && sleep 1
@@ -128,6 +134,7 @@ server {
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection 'upgrade';
         proxy_cache_bypass \$http_upgrade;
+        proxy_set_header Host \$host;
     }
 }
 EOF
