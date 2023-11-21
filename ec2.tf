@@ -35,14 +35,13 @@ resource "aws_launch_template" "fullnode_ec2_template" {
 
 resource "aws_key_pair" "ssh_key" {
   key_name   = "ssh_key"
-  public_key = file("~/.ssh/id_rsa.pub")
+  public_key = file(var.ssh_public_key)
 }
 
 # Autoscaling group
 resource "aws_autoscaling_group" "fullnode_asg" {
-  # no of instances
   desired_capacity = 1
-  max_size         = 1
+  max_size         = 2
   min_size         = 1
 
   # Connect to the target group

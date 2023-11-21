@@ -41,6 +41,12 @@ variable "ec2_instance_type" {
   default     = "m5.8xlarge"
 }
 
+variable "ssh_public_key" {
+  description = "Public SSH key for AWS key pair"
+  type        = string
+  default     = "~/.ssh/id_rsa.pub"
+}
+
 variable "ec2_disk_size" {
   description = "Size of the root disk in GB"
   type        = number

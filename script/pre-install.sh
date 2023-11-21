@@ -114,7 +114,7 @@ sudo systemctl enable namadad
 sed -i '/^\[ledger\.cometbft\.rpc\]$/,/^\[/ s/laddr = "tcp:\/\/127\.0\.0\.1:26657"/laddr = "tcp:\/\/0.0.0.0:26657"/' "$HOME/.local/share/namada/$NAMADA_CHAIN_ID/config.toml"
 
 echo "\e[1m\e[32mStarting namadad service ... \e[0m" && sleep 1
-sudo systemctl restart namadad && journalctl -u namadad -f -o cat
+sudo systemctl restart namadad
 
 
 echo "\e[1m\e[32mInstaling nginx... \e[0m" && sleep 1
