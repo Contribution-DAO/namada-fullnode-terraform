@@ -39,5 +39,5 @@ ContributionDAO - We are a top-tier validator node service provider, offering bl
 
 ## Author
 - POR | ContributionDAO
-- pongchai#2968 | [twitter/llPorZall](https://twitter.com/llPorZall)
+- pongchai | [twitter/llPorZall](https://twitter.com/llPorZall)
 - NodeOps from the ContributionDAO team
